@@ -2,45 +2,27 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 import time
+import math
+import xlsxwriter
 
-
-start_time = time.time()
 url = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
 df = pd.read_html(url)
 table = df[0] # choosing first table from the df
 tickers = table['Symbol'].tolist() # list of stocks in s&p 500
 
-# apple = yf.Ticker("AAPL")
-# hist = apple.history(period="5d")
-# close = hist['Close'].tolist()
-# print(close)
-
-# symbol = 'MSFT'
-# stock = yf.Ticker(symbol)
-# price = stock.info['currentPrice']
-# market_cap = stock.info['marketCap']
-
-
-# tickers = yf.Tickers('MSFT AAPL GOOG')
-# dat = yf.Ticker("BRK.B")
-# print(dat.info)
-
-# yf.download(['MSFT', 'AAPL', 'GOOG'], period='1mo')
+while True:
+    try:
+        portfolio = float(input("What is the value of your portfolio?\n"))
+        break
+    except ValueError:
+        print("Please enter a valid number (e.g., 1000000 or 100000.50).")
+start_time = time.time()
 
 # df.append() removed after pandas 2.0
 
 tickers = [t.replace('.', '-') for t in tickers] # yfinance formats tickers like BRK.B as BRK-B
 
-# this way of getting info from yfinance is slow
-
-# def spinning(loading):
-#     spinner = ['-', '\\', '|', '/', '-', '\\', '|', '/']
-#     while loading:
-#         for line in spinner:
-#             sys.stdout.write('\r' + line)
-#             sys.stdout.flush()
-#             time.sleep(0.3)
-
+# this way of getting info from yfinance is slow however yfinance does not support getting info of a group of tickers unlike apis that allow batch requests
 
 print("Retrieving S&P 500 data, may take up to 5 minutes")
 rows = []
@@ -53,26 +35,72 @@ for ticker in tickers:
     except KeyError:
         print(f"Data missing for {ticker}")
         continue
-    # final_df = pd.concat([
-    #     final_df,
-    #     pd.DataFrame([[ticker, price, market_cap, 'N/A']], columns=columns)
-    # ], ignore_index=True)
+    # time.sleep(1.5)
+
 columns = ['Ticker', 'Stock Price', 'Market Capitalization', 'Number of Shares to Buy']
 final_df = pd.DataFrame(rows, columns=columns)
+position_size = portfolio/len(final_df.index)
+
+for i in range(len(final_df.index)):
+    final_df.loc[i, 'Number of Shares to Buy'] = math.floor(position_size/final_df.loc[i, 'Stock Price'])
 
 end_time = time.time()
 elapsed = end_time - start_time
-minutes, seconds = int(elapsed // 60), int(elapsed % 60)
+minutes, seconds = int(elapsed // 60), int(elapsed % 60)    
 print(f"\nTask completed in {minutes} minutes and {seconds} seconds.")
 print(final_df)
 
-# attempted to make groups of calls to yfinance but found out to get fundamental data the only option is to loop through each ticker
-# from https://stackoverflow.com/questions/312443/how-do-i-split-a-list-into-equally-sized-chunks
-# def chunks(lst, n):
-#     """Yield successive n-sized chunks from lst."""
-#     for i in range(0, len(lst), n):
-#         yield lst[i:i + n]
-# tickers_grouped = list(chunks(tickers, 100))
-# tickers_combined = []
-# for i in range(len(tickers_grouped)):
-#     tickers_combined.append(','.join(tickers_grouped[i]))
+# exporting to excel
+writer = pd.ExcelWriter('recommended trades.xlsx', engine = 'xlsxwriter')
+final_df.to_excel(writer, 'Recommended Trades', index = False)
+
+background_color = '#0a0a23'
+font_color = '#ffffff'
+
+string_format = writer.book.add_format(
+    {
+        'font_color': font_color,
+        'bg_color': background_color,
+        'border': 1
+    }
+)
+
+dollar_format = writer.book.add_format(
+    {
+        'num_format': '$0.00',
+        'font_color': font_color,
+        'bg_color': background_color,
+        'border': 1
+    }
+)
+
+integer_format = writer.book.add_format(
+    {
+        'num_format': '0',
+        'font_color': font_color,
+        'bg_color': background_color,
+        'border': 1
+    }
+)
+
+
+column_formats = {
+    'A': ['Ticker', string_format],
+    'B': ['Stock Price', dollar_format],
+    'C': ['Market Capitalization', dollar_format],
+    'D': ['Number of Shares to Buy', integer_format]
+}
+
+# writer.sheets['Recommended Trades'].write('A1', 'Ticker', string_format)
+# writer.sheets['Recommended Trades'].write('B1', 'Stock Price', dollar_format)
+# writer.sheets['Recommended Trades'].write('C1', 'Market Capitalization', dollar_format)
+# writer.sheets['Recommended Trades'].write('D1', 'Number of Shares to Buy', integer_format)
+
+for column in column_formats.keys():
+    writer.sheets['Recommended Trades'].write(f'{column}1', column_formats[column][0], column_formats[column][1])
+
+for column in column_formats.keys():
+    writer.sheets['Recommended Trades'].set_column(f'{column}:{column}', 18, column_formats[column][1])
+
+# writer.save() doesnt work
+writer.close()
