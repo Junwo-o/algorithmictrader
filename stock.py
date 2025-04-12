@@ -12,12 +12,9 @@ sub_sector = table['GICS Sub-Industry'].tolist()
 
 tickers = yf.Tickers('MSFT AAPL GOOG')
 output = tickers.tickers['MSFT'].info
-new_output = yf.download(['MSFT', 'AAPL', 'GOOG'], period='1mo')
+new_output = yf.download(['MSFT', 'AAPL', 'GOOG'], period='1mo', auto_adjust=False)
 print(new_output)
 
-
-# Load ticker
-# ticker = yf.Ticker("AAPL")  # Apple Inc.
 
 # Open	The stock’s price at the start of the trading period (day, minute, etc.)
 # High	The highest price the stock traded at during the period
