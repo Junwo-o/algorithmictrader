@@ -12,14 +12,16 @@ tickers = table['Symbol'].tolist() # list of stocks in s&p 500
 # close = hist['Close'].tolist()
 # print(close)
 
-symbol = 'MSFT'
-stock = yf.Ticker(symbol)
-price = stock.info['currentPrice']
-market_cap = stock.info['marketCap']
+# symbol = 'MSFT'
+# stock = yf.Ticker(symbol)
+# price = stock.info['currentPrice']
+# market_cap = stock.info['marketCap']
 
 
 # tickers = yf.Tickers('MSFT AAPL GOOG')
-# tickers.tickers['MSFT'].info
+# dat = yf.Ticker("BRK.B")
+# print(dat.info)
+
 # yf.download(['MSFT', 'AAPL', 'GOOG'], period='1mo')
 
 columns = ['Ticker', 'Stock Price', 'Market Capitalization', 'Number of Shares to Buy']
@@ -28,13 +30,14 @@ final_df = pd.DataFrame(columns = columns)
 # df.append() removed after pandas 2.0
 # new_row = pd.DataFrame([
 #     [symbol, price, market_cap, 'N/A']
-# # ], columns = columns)
+# ], columns = columns)
 # final_df = pd.concat([final_df, new_row], ignore_index=True)
 # for ticker in tickers:
 #     stock = yf.Ticker(ticker)
 #     final_df = pd.concat([final_df, pd.DataFrame([[ticker, stock.info['currentPrice'], stock.info['marketCap'], 'N/A']], columns = columns)], ignore_index=True)
 # print(final_df)
 
+tickers = [t.replace('.', '-') for t in tickers]
 for ticker in tickers:
     stock = yf.Ticker(ticker)
     try:
@@ -42,11 +45,10 @@ for ticker in tickers:
         market_cap = stock.info['marketCap']
     except KeyError:
         print(f"Data missing for {ticker}")
-        continue  # skip this ticker
+        continue
 
     final_df = pd.concat([
         final_df,
         pd.DataFrame([[ticker, price, market_cap, 'N/A']], columns=columns)
     ], ignore_index=True)
-
 print(final_df)
