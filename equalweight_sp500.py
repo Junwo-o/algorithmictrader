@@ -12,7 +12,41 @@ tickers = table['Symbol'].tolist() # list of stocks in s&p 500
 # close = hist['Close'].tolist()
 # print(close)
 
-stock = yf.Ticker("MSFT")
+symbol = 'MSFT'
+stock = yf.Ticker(symbol)
 price = stock.info['currentPrice']
 market_cap = stock.info['marketCap']
-print(market_cap)
+
+
+# tickers = yf.Tickers('MSFT AAPL GOOG')
+# tickers.tickers['MSFT'].info
+# yf.download(['MSFT', 'AAPL', 'GOOG'], period='1mo')
+
+columns = ['Ticker', 'Stock Price', 'Market Capitalization', 'Number of Shares to Buy']
+final_df = pd.DataFrame(columns = columns)
+
+# df.append() removed after pandas 2.0
+# new_row = pd.DataFrame([
+#     [symbol, price, market_cap, 'N/A']
+# # ], columns = columns)
+# final_df = pd.concat([final_df, new_row], ignore_index=True)
+# for ticker in tickers:
+#     stock = yf.Ticker(ticker)
+#     final_df = pd.concat([final_df, pd.DataFrame([[ticker, stock.info['currentPrice'], stock.info['marketCap'], 'N/A']], columns = columns)], ignore_index=True)
+# print(final_df)
+
+for ticker in tickers:
+    stock = yf.Ticker(ticker)
+    try:
+        price = stock.info['currentPrice']
+        market_cap = stock.info['marketCap']
+    except KeyError:
+        print(f"Data missing for {ticker}")
+        continue  # skip this ticker
+
+    final_df = pd.concat([
+        final_df,
+        pd.DataFrame([[ticker, price, market_cap, 'N/A']], columns=columns)
+    ], ignore_index=True)
+
+print(final_df)
