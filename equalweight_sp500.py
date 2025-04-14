@@ -51,7 +51,7 @@ print(f"\nTask completed in {minutes} minutes and {seconds} seconds.")
 print(final_df)
 
 # exporting to excel
-writer = pd.ExcelWriter('recommended trades.xlsx', engine = 'xlsxwriter')
+writer = pd.ExcelWriter('recommended_trades.xlsx', engine = 'xlsxwriter')
 final_df.to_excel(writer, 'Recommended Trades', index = False)
 
 background_color = '#0a0a23'
