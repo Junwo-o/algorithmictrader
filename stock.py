@@ -66,3 +66,4 @@ data = pd.read_csv("sp500_prices.csv", header=[0,1], index_col=0)
 #             sys.stdout.write('\r' + line)
 #             sys.stdout.flush()
 #             time.sleep(0.3)
+    
